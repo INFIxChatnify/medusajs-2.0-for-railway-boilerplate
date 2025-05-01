@@ -1,21 +1,21 @@
-import { 
+import {
   createWorkflow,
-  WorkflowResponse
-} from "@medusajs/framework/workflows-sdk"
-import { 
+  WorkflowResponse,
+} from "@medusajs/framework/workflows-sdk";
+import {
   useQueryGraphStep,
   createRemoteLinkStep,
   completeCartWorkflow,
-  getOrderDetailWorkflow
-} from "@medusajs/medusa/core-flows"
-import groupVendorItemsStep from "./steps/group-vendor-items"
-import createVendorOrdersStep from "./steps/create-vendor-orders"
+  getOrderDetailWorkflow,
+} from "@medusajs/medusa/core-flows";
+import groupVendorItemsStep from "./steps/group-vendor-items";
+import createVendorOrdersStep from "./steps/create-vendor-orders";
 
 type WorkflowInput = {
-  cart_id: string
-}
+  cart_id: string;
+};
 
-const createVendorOrdersWorkflow = createWorkflow(
+const createVendorOrdersWorkflow: any = createWorkflow(
   "create-vendor-order",
   (input: WorkflowInput) => {
     const { data: carts } = useQueryGraphStep({
@@ -23,20 +23,20 @@ const createVendorOrdersWorkflow = createWorkflow(
       fields: ["id", "items.*"],
       filters: { id: input.cart_id },
       options: {
-        throwIfKeyNotFound: true
-      }
-    })
+        throwIfKeyNotFound: true,
+      },
+    });
 
     const { id: orderId } = completeCartWorkflow.runAsStep({
       input: {
-        id: carts[0].id
-      }
-    })
+        id: carts[0].id,
+      },
+    });
 
     const { vendorsItems } = groupVendorItemsStep({
-      cart: carts[0]
-    })
-    
+      cart: carts[0],
+    });
+
     const order = getOrderDetailWorkflow.runAsStep({
       input: {
         order_id: orderId,
@@ -49,25 +49,22 @@ const createVendorOrdersWorkflow = createWorkflow(
           "shipping_address.*",
           "billing_address.*",
           "shipping_methods.*",
-        ]
-      }
-    })
+        ],
+      },
+    });
 
-    const { 
-      orders: vendorOrders, 
-      linkDefs
-    } = createVendorOrdersStep({
+    const { orders: vendorOrders, linkDefs } = createVendorOrdersStep({
       parentOrder: order,
-      vendorsItems
-    })
+      vendorsItems,
+    });
 
-    createRemoteLinkStep(linkDefs)
+    createRemoteLinkStep(linkDefs);
 
     return new WorkflowResponse({
       parent_order: order,
-      vendor_orders: vendorOrders
-    })
+      vendor_orders: vendorOrders,
+    });
   }
-)
+);
 
-export default createVendorOrdersWorkflow
+export default createVendorOrdersWorkflow;
