@@ -1,4 +1,9 @@
-import { loadEnv, Modules, defineConfig } from "@medusajs/utils";
+import {
+  loadEnv,
+  Modules,
+  ContainerRegistrationKeys,
+  defineConfig,
+} from "@medusajs/utils";
 import {
   ADMIN_CORS,
   AUTH_CORS,
@@ -47,6 +52,29 @@ const medusaConfig = {
   modules: [
     {
       resolve: "./src/modules/marketplace",
+    },
+    {
+      resolve: "@medusajs/medusa/auth",
+      options: {
+        providers: [
+          // default provider
+          {
+            resolve: "@medusajs/medusa/auth-emailpass",
+            dependencies: [Modules.CACHE, ContainerRegistrationKeys.LOGGER],
+            id: "emailpass",
+          },
+          {
+            resolve: "./src/modules/my-auth",
+            id: "my-auth",
+            dependencies: [Modules.CACHE, ContainerRegistrationKeys.LOGGER],
+            options: {
+              clientId: process.env.CLIENT_ID,
+              clientSecret: process.env.CLIENT_SECRET,
+              callbackUrl: process.env.CALLBACK_URL,
+            },
+          },
+        ],
+      },
     },
     {
       key: Modules.FILE,
